@@ -1,6 +1,7 @@
 """OpenAI chat wrapper."""
 from __future__ import annotations
 
+from enum import Enum
 import logging
 import sys
 from typing import (
@@ -45,6 +46,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+class StreamingStatus:
+    aborted:bool = False
+
+    def abort(self):
+        self.aborted = True
 
 def _import_tiktoken() -> Any:
     try:
@@ -315,6 +321,7 @@ class ChatOpenAI(BaseChatModel):
             inner_completion = ""
             role = "assistant"
             params["stream"] = True
+            streaming_status = StreamingStatus()
             for stream_resp in self.completion_with_retry(
                 messages=message_dicts, **params
             ):
@@ -322,7 +329,9 @@ class ChatOpenAI(BaseChatModel):
                 token = stream_resp["choices"][0]["delta"].get("content", "")
                 inner_completion += token
                 if run_manager:
-                    run_manager.on_llm_new_token(token)
+                    run_manager.on_llm_new_token(token, status=streaming_status)
+                    if streaming_status.aborted is True:
+                        break
             message = _convert_dict_to_message(
                 {"content": inner_completion, "role": role}
             )
