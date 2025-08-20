@@ -9,7 +9,7 @@ from langchain_core._api.beta_decorator import beta, warn_beta
 
 
 @pytest.mark.parametrize(
-    "kwargs, expected_message",
+    ("kwargs", "expected_message"),
     [
         (
             {
@@ -55,46 +55,46 @@ def test_warn_beta(kwargs: dict[str, Any], expected_message: str) -> None:
 
 @beta()
 def beta_function() -> str:
-    """original doc"""
+    """Original doc."""
     return "This is a beta function."
 
 
 @beta()
 async def beta_async_function() -> str:
-    """original doc"""
+    """Original doc."""
     return "This is a beta async function."
 
 
 class ClassWithBetaMethods:
     def __init__(self) -> None:
-        """original doc"""
+        """Original doc."""
 
     @beta()
     def beta_method(self) -> str:
-        """original doc"""
+        """Original doc."""
         return "This is a beta method."
 
     @beta()
     async def beta_async_method(self) -> str:
-        """original doc"""
+        """Original doc."""
         return "This is a beta async method."
 
     @classmethod
     @beta()
     def beta_classmethod(cls) -> str:
-        """original doc"""
+        """Original doc."""
         return "This is a beta classmethod."
 
     @staticmethod
     @beta()
     def beta_staticmethod() -> str:
-        """original doc"""
+        """Original doc."""
         return "This is a beta staticmethod."
 
+    @beta()  # type: ignore[prop-decorator]
     @property
-    @beta()
     def beta_property(self) -> str:
-        """original doc"""
+        """Original doc."""
         return "This is a beta property."
 
 
@@ -226,10 +226,10 @@ def test_beta_property() -> None:
         warning = warning_list[0].message
 
         assert str(warning) == (
-            "The method `ClassWithBetaMethods.beta_property` is in beta. "
+            "The attribute `ClassWithBetaMethods.beta_property` is in beta. "
             "It is actively being worked on, so the API may change."
         )
-        doc = ClassWithBetaMethods.beta_property.__doc__
+        doc = ClassWithBetaMethods.__dict__["beta_property"].__doc__
         assert isinstance(doc, str)
         assert doc.startswith(".. beta::")
 
@@ -240,11 +240,11 @@ def test_whole_class_beta() -> None:
     @beta()
     class BetaClass:
         def __init__(self) -> None:
-            """original doc"""
+            """Original doc."""
 
         @beta()
         def beta_method(self) -> str:
-            """original doc"""
+            """Original doc."""
             return "This is a beta method."
 
     with warnings.catch_warnings(record=True) as warning_list:
@@ -281,14 +281,14 @@ def test_whole_class_inherited_beta() -> None:
     class BetaClass:
         @beta()
         def beta_method(self) -> str:
-            """original doc"""
+            """Original doc."""
             return "This is a beta method."
 
     @beta()
     class InheritedBetaClass(BetaClass):
         @beta()
         def beta_method(self) -> str:
-            """original doc"""
+            """Original doc."""
             return "This is a beta method 2."
 
     with warnings.catch_warnings(record=True) as warning_list:
@@ -344,7 +344,7 @@ def test_whole_class_inherited_beta() -> None:
 class MyModel(BaseModel):
     @beta()
     def beta_method(self) -> str:
-        """original doc"""
+        """Original doc."""
         return "This is a beta method."
 
 
