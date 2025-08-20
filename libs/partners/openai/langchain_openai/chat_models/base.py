@@ -116,6 +116,12 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+class StreamingStatus:
+    aborted:bool = False
+
+    def abort(self):
+        self.aborted = True
+
 # This SSL context is equivelent to the default `verify=True`.
 # https://www.python-httpx.org/advanced/ssl/#configuring-client-instances
 global_ssl_context = ssl.create_default_context(cafile=certifi.where())
@@ -1090,6 +1096,7 @@ class BaseChatOpenAI(BaseChatModel):
                 response = self.client.create(**payload)
             context_manager = response
         try:
+            streaming_status = StreamingStatus()
             with context_manager as response:
                 is_first_chunk = True
                 for chunk in response:
@@ -1109,7 +1116,10 @@ class BaseChatOpenAI(BaseChatModel):
                             generation_chunk.text,
                             chunk=generation_chunk,
                             logprobs=logprobs,
+                            status=streaming_status
                         )
+                        if streaming_status.aborted is True:
+                            break
                     is_first_chunk = False
                     yield generation_chunk
         except openai.BadRequestError as e:
